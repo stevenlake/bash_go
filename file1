@@ -1,0 +1,135 @@
+题目1：打印1+2+3...+100:
+#!/bin/bash
+n=1
+total=0
+while [ $n -le 100 ]
+do
+        total=$(($n + $total))
+        n=$(($n + 1))
+done
+echo $total
+
+题目2：在根目录下创建四个文件m1.txt，m2.txt，m3.txt 和m4.txt，创建m1，m2，m3，m4 四个目录，分别将文件拷贝到对应目录下：
+#!/bin/bash
+for i in 1 2 3 4
+do
+        touch /m${i}.txt
+        mkdir /m${i}
+        cp /m${i}.txt /m${i}
+done
+
+题目3：
+判断输入的参数是不是一个字符设备，如果是则将其拷贝到/dev 目录下
+方案1：非交互式的shell
+#!/bin/bash
+if [ -c $1 ];then
+        cp $1 /dev
+fi
+方案2：交互式shell
+#!/bin/bash
+echo -e "please input a filename\n"
+read filename
+if [ -f $filename ];then
+        cp $filename /db2log
+fi
+
+题目4：自动删除账号，账号名称为stud1~stud50
+方案1：在判断中直接利用grep 的返回值
+#!/bin/bash
+i=1
+while [ $i -le 50 ]
+do
+        if [ `cut -d: -f1 /etc/passwd|grep -w stud${i}` ];then
+                userdel -r stud${i}
+        else
+                echo "The user does not exist!"
+        fi
+        i=$(($i+1))
+done
+
+方案2：双层循环
+#!/bin/bash
+i=1
+while [ $i -le 50 ]
+do
+        for j in `cut -d: -f1 /etc/passwd`
+        do
+                if [ stud$i = $j ];then
+                        userdel -r stud$i
+                        break
+                fi
+        done
+        i=$(($i+1))
+done
+
+题目5：在目录/userdata 中创建目录user1~50，并且赋权rwxr-xr--
+方案1：
+#!/bin/bash
+i=1
+if [ ! -d /userdata ];then
+        mkdir /userdata
+fi
+cd /userdata
+while [ $i -le 50 ]
+do
+        mkdir user$i
+        chmod 754 user$i
+        i=$(($i+1))
+done
+补充：
+题目5对应的删除用户语句为：
+for ((i=10;i <= 30;i++));do userdel -r std$i;done
+for ((i=1;i < 10;i++));do userdel -r std0$i;done
+
+题目6：压缩/etc 下所有内容，存在在/root/bak 目录里，文件名为“yymmdd_etc”，yy 为年，mm 为月，dd 为日。
+关键点：日期的格式化写法；不可压缩绝对路径，例如形式“tar -cvf dir.tar /dir”
+#!/bin/bash
+prefix=`date '+%y%m%d'`
+if [ ! -d /root/bak ];then
+        mkdir /root/bak
+fi
+cd /etc/
+tar -cvf /root/bak/${prefix}_etc.tar *
+
+题目7：编写一个后面可以执行参数的脚本，显示当前参数表示的是文件还是目录；当输入的参数表示目录时，显示目录的名称、inode、Size、所有者。
+方法1：
+#!/bin/bash
+if [ $# -eq 0 ];then
+    echo "There should be a parameter following the command"
+    exit 1
+fi
+if [ $# -gt 1 ];then
+    echo "The number of parameters should only be 1"
+    exit 1
+fi
+if [ -d $1 ];then
+    filename=$1      #此处先把参数赋值给filename 是因为最初使用ls -ild 命令设定环境变量时，/tmp 没有被解释（那个时候还对位置参数了解的不够好）。在方法2 中会阐述直接使用位置参数的方法。
+    echo "The paramter is a directory"
+    set `ls -ild $1`     #使用set 命令将后面命令的输出作为位置参数
+    echo "name inode size"
+    echo
+    echo "$filename $1 $6"
+elif [ -f $1 ];then
+    echo "The parameter is a regular file"
+fi
+exit 0
+方法2：当位置参数是10以上的数字时，需要使用{} 修饰位置参数
+#!/bin/bash
+if [ $# -eq 0 ];then
+    echo "There should be a parameter following the command"
+    exit 1
+fi
+if [ $# -gt 1 ];then
+    echo "The number of parameters should only be 1"
+    exit 1
+fi
+if [ -d $1 ];then
+    echo "The paramter is a directory"
+    set `ls -ild $1`
+    echo "name inode size"
+    echo
+    echo "${10} $1 $6"
+elif [ -f $1 ];then
+    echo "The parameter is a regular file"
+fi 
+exit 0
