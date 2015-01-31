@@ -133,3 +133,25 @@ elif [ -f $1 ];then
     echo "The parameter is a regular file"
 fi 
 exit 0
+
+题目8：Write a bash to do the following. Take two arguments: the first is a three digit number representing file permissions (e.g. 744 means rwxr--r--), the second is the name of a directory. Then should list all files in the specified directory that have the specified file permissions. If no directory is specified, the root directory of the file system, /, should be checked. If the file permission value is not specified, or is invalid, an error message should be displayed.
+方法1：脚本方式，注意Parameter Expansion 的用法。
+#!/bin/bash
+perm1=${1:?the first parameter is null}
+perm2=${2:?the second parameter is null}
+perm3=${3:?the third parameter is null}
+
+if [ $perm1 -ge 4 -a $perm1 -le 7 -a $perm2 -ge 4 -a $perm2 -le 7 -a $perm3 -ge 4 -a $perm3 -le 7 ];then
+        echo "The three parameters are legal"
+else
+        echo "The three parameters are all not legal"
+        exit 1
+fi
+read -p "please input a directory name: " dir
+dir=${dir:-/}
+if [ ! -d $dir ];then
+        echo "The $dir is not a directory"
+        exit 1
+fi
+echo "Files under the directory $dir with permission ${perm1}${perm2}${perm3} are:"
+find $dir -maxdepth 1 -perm ${perm1}${perm2}${perm3} 
